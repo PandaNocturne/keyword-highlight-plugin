@@ -1,8 +1,5 @@
-/*
-
-This CSS file will be included with your plugin, and
-available in the app when your plugin is enabled.
-
-If your plugin does not need CSS, delete this file.
-
-*/
+/* 高亮显示关键词的样式 */
+.keyword-highlight {
+  border-radius: 5px; 
+  box-shadow: 1px 2px 1px rgba(0, 0, 0, 0.2); 
+}

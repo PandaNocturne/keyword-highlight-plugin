@@ -1,94 +1,264 @@
-import { Plugin } from 'obsidian';
+import { App,Plugin, MarkdownView, Notice, Setting,PluginSettingTab,Menu, MenuItem } from 'obsidian';
 
-export default class TableCollapsePlugin extends Plugin {
-   // 定义observer属性
-  observer: MutationObserver | null = null;
+interface KeywordHighlightSettings {
+  keywordPropertyName: string;
+  colors: string[];
+}
 
-  onload() {
-    console.log('加载Table Collapse Plugin');
+const DEFAULT_SETTINGS: KeywordHighlightSettings = {
+  keywordPropertyName: 'keywords',
+  colors: ['#ffadadff', '#ffd6a5ff', '#fdffb6ff', '#caffbfff', '#9bf6ffff', '#a0c4ffff', '#bdb2ffff', '#ffc6ffff'] // 更新默认颜色
+};
 
+export default class KeywordHighlightPlugin extends Plugin {
+  private observer: MutationObserver;
+  private debounceTimeout: number;
+  private settings: KeywordHighlightSettings;
+
+  getSettings() {
+    return this.settings;
+  }
+
+  async onload() {
+    console.log('加载Keyword Highlight Plugin');
+  
+    // 加载设置
+    await this.loadSettings();
+  
     // 添加样式
     this.addStyles();
+  
+    // 添加右键菜单项
+    this.addContextMenu();
+  
+    // 在笔记打开时高亮关键词
+    this.registerEvent(this.app.workspace.on('file-open', this.highlightKeywords.bind(this)));
+  
+    // 监听阅读模式的变化
+    this.registerEvent(this.app.workspace.on('layout-change', this.observeAndHighlight.bind(this)));
+  
+    // 添加设置选项
+    this.addSettingTab(new KeywordHighlightSettingTab(this.app, this));
+  
+    // 添加阅读模式下的右键菜单项
+    this.addReadingModeContextMenu();
+  }
+  
+  addReadingModeContextMenu() {
+    document.addEventListener('contextmenu', (event) => {
+      const selection = window.getSelection()?.toString();
+      if (!selection) return;
+  
+      const target = event.target as HTMLElement;
+      if (target.closest('.markdown-preview-view')) {
+        const menu = new Menu();
+        menu.addItem((item: MenuItem) => { // 为 item 指定类型
+          item.setTitle('添加到关键词')
+            .setIcon('star')
+            .onClick(() => {
+              const view = this.app.workspace.getActiveViewOfType(MarkdownView);
+              if (view) {
+                this.addKeyword(selection, view);
+              }
+            });
+        });
+        menu.showAtMouseEvent(event);
+        event.preventDefault();
+      }
+    });
+  }
 
-    // 使用MutationObserver监视DOM变化
-    this.observeDOM();
+
+  async loadSettings() {
+    this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+    this.addStyles(); // 加载设置后添加样式
+  }
+
+  async saveSettings() {
+    await this.saveData(this.settings);
   }
 
   onunload() {
-    console.log('卸载Table Collapse Plugin');
-    // 停止观察DOM变化
+    console.log('卸载Keyword Highlight Plugin');
     if (this.observer) {
       this.observer.disconnect();
     }
-    // 移除按钮
-    const buttons = document.querySelectorAll('.toggle-button');
-    buttons.forEach(button => button.remove());
   }
+
 
   addStyles() {
     const style = document.createElement('style');
-    style.textContent = `
-      .hidden-tbody {
-        display: none;
-      }
-      .toggle-button {
-        margin-left: 10px;
-        cursor: pointer;
-      }
-    `;
+    const colors = this.settings.colors;
+    let styleContent = '';
+  
+    colors.forEach((color, index) => {
+      styleContent += `
+        .keyword-highlight-${index} { background-color: ${color}; }
+      `;
+    });
+  
+    style.textContent = styleContent;
     document.head.appendChild(style);
   }
+  
 
-  observeDOM() {
-    // 创建一个MutationObserver实例
-    this.observer = new MutationObserver(mutations => {
-      mutations.forEach(mutation => {
-        if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
-          this.addToggleButtons();
-        }
+  addContextMenu() {
+    this.registerEvent(this.app.workspace.on('editor-menu', (menu, editor, view) => {
+      menu.addItem((item) => {
+        item.setTitle('添加到关键词')
+          .setIcon('star')
+          .onClick(() => {
+            const selection = editor.getSelection();
+            this.addKeyword(selection, view as MarkdownView);
+          });
       });
-    });
-
-    // 配置MutationObserver
-    const config = { childList: true, subtree: true };
-
-    // 开始观察特定容器（假设表格在#table-container中）
-    const container = document.querySelector('#table-container') || document.body;
-    this.observer.observe(container, config);
-
-    // 初始调用，确保现有表格也添加按钮
-    this.addToggleButtons();
+    }));
   }
 
-  addToggleButtons() {
-    const tables = document.querySelectorAll('table');
-    tables.forEach(table => {
-      const tbody = table.querySelector('tbody');
-
-      if (tbody) {
-        // 确保按钮添加到表格右侧
-        let button = table.querySelector('.toggle-button') as HTMLElement;
-        if (!button) {
-          button = document.createElement('button');
-          button.textContent = '折叠';
-          button.classList.add('toggle-button');
-          button.style.position = 'absolute';
-          button.style.right = '0';
-          button.style.top = '0';
-          button.addEventListener('click', () => {
-            if (tbody.classList.contains('hidden-tbody')) {
-              tbody.classList.remove('hidden-tbody');
-              button!.textContent = '折叠';
-            } else {
-              tbody.classList.add('hidden-tbody');
-              button!.textContent = '展开';
-            }
-          });
-          // 将按钮添加到表格右侧
-          table.style.position = 'relative'; // 确保表格是相对定位
-          table.appendChild(button);
+  async addKeyword(keyword: string, view: MarkdownView) {
+    const file = view.file;
+    if (!file) return; // 添加空值检查
+    await this.app.fileManager.processFrontMatter(file, (fm) => {
+      if (!fm[this.settings.keywordPropertyName]) {
+        fm[this.settings.keywordPropertyName] = [];
+      }
+      if (!fm[this.settings.keywordPropertyName].includes(keyword)) {
+        fm[this.settings.keywordPropertyName].push(keyword);
+      }
+    });
+  
+    new Notice(`关键词 "${keyword}" 已添加`);
+    await this.highlightKeywords(); // 确保高亮更新
+  }
+  
+  async highlightKeywords() {
+    const view = this.app.workspace.getActiveViewOfType(MarkdownView);
+    if (!view) return;
+  
+    const file = view.file;
+    if (!file) return; // 添加空值检查
+  
+    const keywords: string[] = [];
+    await this.app.fileManager.processFrontMatter(file, fm => {
+      if (fm[this.settings.keywordPropertyName]) {
+        for (const i of fm[this.settings.keywordPropertyName]) {
+          keywords.push(i);
         }
       }
     });
+  
+    // 处理阅读模式
+    const contentEl = view.containerEl.querySelector('.markdown-preview-view .markdown-preview-section');
+    if (contentEl) {
+      this.highlightText(contentEl as HTMLElement, keywords);
+    }
+  }
+
+  
+  highlightText(contentEl: HTMLElement, keywords: string[]) {
+    const walker = document.createTreeWalker(contentEl, NodeFilter.SHOW_TEXT);
+    const nodesToHighlight: Text[] = [];
+  
+    while (walker.nextNode()) {
+      const node = walker.currentNode as Text;
+      if (keywords.some(keyword => node.nodeValue!.includes(keyword))) {
+        nodesToHighlight.push(node);
+      }
+    }
+  
+    nodesToHighlight.forEach(node => {
+      const parent = node.parentNode;
+      const frag = document.createDocumentFragment();
+      let lastIndex = 0;
+  
+      keywords.forEach((keyword, index) => {
+        const regex = new RegExp(`(${keyword})`, 'gi');
+        let match;
+        while ((match = regex.exec(node.nodeValue!)) !== null) {
+          if (match.index > lastIndex) {
+            frag.appendChild(document.createTextNode(node.nodeValue!.slice(lastIndex, match.index)));
+          }
+          const span = document.createElement('span');
+          span.className = `keyword-highlight keyword-highlight-${index % this.settings.colors.length}`;
+          span.textContent = match[1];
+          frag.appendChild(span);
+          lastIndex = regex.lastIndex;
+        }
+      });
+  
+      if (lastIndex < node.nodeValue!.length) {
+        frag.appendChild(document.createTextNode(node.nodeValue!.slice(lastIndex)));
+      }
+  
+      if (parent) {
+        parent.replaceChild(frag, node);
+      }
+    });
+  }
+
+  observeAndHighlight() {
+    const view = this.app.workspace.getActiveViewOfType(MarkdownView);
+    if (!view) return;
+
+    const contentEl = view.containerEl.querySelector('.markdown-preview-view .markdown-preview-section');
+    if (!contentEl) return;
+
+    if (this.observer) {
+      this.observer.disconnect();
+    }
+
+    this.observer = new MutationObserver(() => {
+      clearTimeout(this.debounceTimeout);
+      this.debounceTimeout = window.setTimeout(() => {
+        this.highlightKeywords();
+      }, 300); // 300ms 防抖
+    });
+
+    this.observer.observe(contentEl, { childList: true, subtree: true });
+
+    // 初始调用一次
+    this.highlightKeywords();
+  }
+}
+
+
+
+class KeywordHighlightSettingTab extends PluginSettingTab {
+  plugin: KeywordHighlightPlugin;
+
+  constructor(app: App, plugin: KeywordHighlightPlugin) {
+    super(app, plugin); // 确保调用父类构造函数
+    this.plugin = plugin;
+  }
+
+  display(): void {
+    const { containerEl } = this;
+
+    containerEl.empty();
+
+    containerEl.createEl('h2', { text: 'Keyword Highlight Plugin 设置' });
+
+    new Setting(containerEl)
+      .setName('关键词属性名')
+      .setDesc('设置用于存储关键词的属性名')
+      .addText(text => text
+        .setPlaceholder('例如：keywords')
+        .setValue(this.plugin.getSettings().keywordPropertyName)
+        .onChange(async (value) => {
+          this.plugin.getSettings().keywordPropertyName = value;
+          await this.plugin.saveSettings();
+        }));
+
+    new Setting(containerEl)
+      .setName('高亮颜色')
+      .setDesc('设置关键词高亮的颜色，使用逗号分隔')
+      .addText(text => text
+        .setPlaceholder('例如：yellow, lightgreen, lightblue')
+        .setValue(this.plugin.getSettings().colors.join(', '))
+        .onChange(async (value) => {
+          this.plugin.getSettings().colors = value.split(',').map(color => color.trim());
+          await this.plugin.saveSettings();
+          this.plugin.addStyles(); // 更新样式
+        }));
   }
 }
