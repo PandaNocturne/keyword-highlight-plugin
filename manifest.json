@@ -1,0 +1,10 @@
+{
+	"id": "table-collapse-plugin",
+	"name": "Table Collapse Plugin",
+	"version": "0.1.3",
+	"minAppVersion": "0.0.0",
+	"description": "在表格的thead中添加一个折叠按钮",
+	"author": "熊猫",
+	"authorUrl": "https://你的网址",
+	"isDesktopOnly": false
+}
