@@ -4,6 +4,8 @@
 
 This is a simple plugin for Obsidian that highlights keywords defined in the YAML properties of your notes.
 
+![](https://raw.githubusercontent.com/PandaNocturne/ImageAssets/main/Obsidian/202406270529379.png)
+
 ## Features
 
 - Highlight specified keywords in notes.
