@@ -18,7 +18,7 @@ This is a simple plugin for Obsidian that highlights keywords defined in the YAM
 
 ## Usage
 
-![](https://raw.githubusercontent.com/PandaNocturne/ImageAssets/main/Obsidian/202406270445080.png)
+![](https://raw.githubusercontent.com/PandaNocturne/ImageAssets/main/Obsidian/202406270524998.png)
 
 ### Settings
 
@@ -31,7 +31,7 @@ This is a simple plugin for Obsidian that highlights keywords defined in the YAM
 1. Select the keyword you want to add.
 2. Right-click and select `Add to Keywords`.
 
-![](https://raw.githubusercontent.com/PandaNocturne/ImageAssets/main/Obsidian/202406270453914.gif)
+![](https://raw.githubusercontent.com/PandaNocturne/ImageAssets/main/Obsidian/202406270525056.gif)
 
 ## Default Settings
 
