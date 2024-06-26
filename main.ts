@@ -1,4 +1,4 @@
-import { App,Plugin, MarkdownView, Notice, Setting,PluginSettingTab,Menu, MenuItem } from 'obsidian';
+import { App, Plugin, MarkdownView, Notice, Setting, PluginSettingTab, Menu, MenuItem } from 'obsidian';
 
 interface KeywordHighlightSettings {
   keywordPropertyName: string;
@@ -20,7 +20,7 @@ export default class KeywordHighlightPlugin extends Plugin {
   }
 
   async onload() {
-    console.log('加载Keyword Highlight Plugin');
+    console.log('Loading Keyword Highlight Plugin');
   
     // 加载设置
     await this.loadSettings();
@@ -53,7 +53,7 @@ export default class KeywordHighlightPlugin extends Plugin {
       if (target.closest('.markdown-preview-view')) {
         const menu = new Menu();
         menu.addItem((item: MenuItem) => { // 为 item 指定类型
-          item.setTitle('添加到关键词')
+          item.setTitle('Add to Keywords')
             .setIcon('star')
             .onClick(() => {
               const view = this.app.workspace.getActiveViewOfType(MarkdownView);
@@ -68,7 +68,6 @@ export default class KeywordHighlightPlugin extends Plugin {
     });
   }
 
-
   async loadSettings() {
     this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
     this.addStyles(); // 加载设置后添加样式
@@ -79,12 +78,11 @@ export default class KeywordHighlightPlugin extends Plugin {
   }
 
   onunload() {
-    console.log('卸载Keyword Highlight Plugin');
+    console.log('Unloading Keyword Highlight Plugin');
     if (this.observer) {
       this.observer.disconnect();
     }
   }
-
 
   addStyles() {
     const style = document.createElement('style');
@@ -100,12 +98,11 @@ export default class KeywordHighlightPlugin extends Plugin {
     style.textContent = styleContent;
     document.head.appendChild(style);
   }
-  
 
   addContextMenu() {
     this.registerEvent(this.app.workspace.on('editor-menu', (menu, editor, view) => {
       menu.addItem((item) => {
-        item.setTitle('添加到关键词')
+        item.setTitle('Add to Keywords')
           .setIcon('star')
           .onClick(() => {
             const selection = editor.getSelection();
@@ -127,7 +124,7 @@ export default class KeywordHighlightPlugin extends Plugin {
       }
     });
   
-    new Notice(`关键词 "${keyword}" 已添加`);
+    new Notice(`Keyword "${keyword}" added`);
     await this.highlightKeywords(); // 确保高亮更新
   }
   
@@ -154,7 +151,6 @@ export default class KeywordHighlightPlugin extends Plugin {
     }
   }
 
-  
   highlightText(contentEl: HTMLElement, keywords: string[]) {
     const walker = document.createTreeWalker(contentEl, NodeFilter.SHOW_TEXT);
     const nodesToHighlight: Text[] = [];
@@ -215,19 +211,14 @@ export default class KeywordHighlightPlugin extends Plugin {
     });
 
     this.observer.observe(contentEl, { childList: true, subtree: true });
-
-    // 初始调用一次
-    this.highlightKeywords();
   }
 }
-
-
 
 class KeywordHighlightSettingTab extends PluginSettingTab {
   plugin: KeywordHighlightPlugin;
 
   constructor(app: App, plugin: KeywordHighlightPlugin) {
-    super(app, plugin); // 确保调用父类构造函数
+    super(app, plugin);
     this.plugin = plugin;
   }
 
@@ -236,13 +227,13 @@ class KeywordHighlightSettingTab extends PluginSettingTab {
 
     containerEl.empty();
 
-    containerEl.createEl('h2', { text: 'Keyword Highlight Plugin 设置' });
+    containerEl.createEl('h2', { text: 'Keyword Highlight Plugin Settings' });
 
     new Setting(containerEl)
-      .setName('关键词属性名')
-      .setDesc('设置用于存储关键词的属性名')
+      .setName('Keyword Property Name')
+      .setDesc('The name of the YAML property that contains the keywords.')
       .addText(text => text
-        .setPlaceholder('例如：keywords')
+        .setPlaceholder('Enter property name')
         .setValue(this.plugin.getSettings().keywordPropertyName)
         .onChange(async (value) => {
           this.plugin.getSettings().keywordPropertyName = value;
@@ -250,10 +241,10 @@ class KeywordHighlightSettingTab extends PluginSettingTab {
         }));
 
     new Setting(containerEl)
-      .setName('高亮颜色')
-      .setDesc('设置关键词高亮的颜色，使用逗号分隔')
-      .addText(text => text
-        .setPlaceholder('例如：yellow, lightgreen, lightblue')
+      .setName('Highlight Colors')
+      .setDesc('Comma-separated list of colors to use for highlighting keywords.')
+      .addTextArea(text => text
+        .setPlaceholder('Enter colors')
         .setValue(this.plugin.getSettings().colors.join(', '))
         .onChange(async (value) => {
           this.plugin.getSettings().colors = value.split(',').map(color => color.trim());

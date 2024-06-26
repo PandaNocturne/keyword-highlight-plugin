@@ -1,9 +1,9 @@
 {
   "id": "keyword-highlight-plugin",
   "name": "Keyword Highlight Plugin",
-  "version": "0.5.0",
+  "version": "0.5.2",
   "minAppVersion": "0.12.0",
-  "description": "高亮显示笔记中的关键词，并允许用户通过右键菜单添加关键词",
+  "description": "A simple plugin for Obsidian that highlights keywords defined in the YAML properties of your notes.",
   "author": "PandaNocturne",
   "authorUrl": "https://github.com/PandaNocturne/keyword-highlight-plugin",
   "isDesktopOnly": false

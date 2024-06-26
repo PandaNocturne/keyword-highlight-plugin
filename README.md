@@ -1,42 +1,39 @@
 # Keyword Highlight Plugin
 
-这是一个用于 Obsidian 的简单插件，可以在阅读模式下高亮笔记中 YAML 属性中定义的关键词(keywords)。
+[中文](./README_zh.md)|[English](./README.md)
 
-![](https://raw.githubusercontent.com/PandaNocturne/ImageAssets/main/Obsidian/202406270447133.png)
+This is a simple plugin for Obsidian that highlights keywords defined in the YAML properties of your notes.
 
-## 功能
+## Features
 
-- 在笔记中高亮指定的关键词。
-- 支持自定义关键词属性名和高亮颜色。
-- 阅读和编辑模式下，右键弹出菜单添加关键词。
+- Highlight specified keywords in notes.
+- Support for custom keyword attribute names and highlight colors.
+- Add keywords via the right-click menu.
 
-## 安装
+## Installation
 
-1. 下载并解压插件文件。
-2. 将插件文件夹放入 Obsidian 的插件目录中。
-3. 在 Obsidian 中启用插件。
+1. Download and unzip the plugin files.
+2. Place the plugin folder into Obsidian's plugin directory.
+3. Enable the plugin in Obsidian.
 
-## 使用
+## Usage
 
 ![](https://raw.githubusercontent.com/PandaNocturne/ImageAssets/main/Obsidian/202406270445080.png)
 
+### Settings
 
-### 设置
+1. Open Obsidian settings.
+2. Go to the `Keyword Highlight Plugin` settings page.
+3. Configure the keyword attribute name and highlight colors.
 
-1. 打开 Obsidian 设置。
-2. 进入 `Keyword Highlight Plugin` 设置页面。
-3. 配置关键词属性名和高亮颜色。
+### Adding Keywords
 
-### 添加关键词
-
-1. 选择要添加的关键词。
-2. 右键选择 `添加到关键词`。
-   - 当然您可以手动在属性面板里面添加`关键词`。
+1. Select the keyword you want to add.
+2. Right-click and select `Add to Keywords`.
 
 ![](https://raw.githubusercontent.com/PandaNocturne/ImageAssets/main/Obsidian/202406270453914.gif)
 
+## Default Settings
 
-## 默认设置
-
-- 关键词属性名：`keywords`
-- 高亮颜色：`#ffadadff`、`#ffd6a5ff`、`#fdffb6ff`、`#caffbfff`、`#9bf6ffff`、`#a0c4ffff`、`#bdb2ffff`、`#ffc6ffff`
+- Keyword attribute name: `keywords`
+- Highlight colors:`#ffadadff,#ffd6a5ff,#fdffb6ff,#caffbfff,#9bf6ffff,#a0c4ffff,#bdb2ffff,#ffc6ffff`
