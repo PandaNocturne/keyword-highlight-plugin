@@ -4,7 +4,7 @@
   "version": "1.0.0",
   "minAppVersion": "0.12.0",
   "description": "高亮显示笔记中的关键词，并允许用户通过右键菜单添加关键词",
-  "author": "你的名字",
-  "authorUrl": "https://你的网址",
+  "author": "PandaNocturne",
+  "authorUrl": "https://github.com/PandaNocturne/keyword-highlight-plugin",
   "isDesktopOnly": false
 }
