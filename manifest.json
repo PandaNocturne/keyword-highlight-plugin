@@ -2,7 +2,7 @@
   "id": "keyword-highlight-plugin",
   "name": "Keyword Highlight Plugin",
   "version": "0.5.0",
-  "minAppVersion": "0.1.0",
+  "minAppVersion": "0.12.0",
   "description": "高亮显示笔记中的关键词，并允许用户通过右键菜单添加关键词",
   "author": "PandaNocturne",
   "authorUrl": "https://github.com/PandaNocturne/keyword-highlight-plugin",
